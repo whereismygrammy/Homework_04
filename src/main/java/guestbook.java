@@ -15,51 +15,25 @@ public class guestbook extends HttpServlet {
         String description = request.getParameter("description");
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-            System.out.println("Db Driver Loaded");
-            Connection connection = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/library?useSSL=false" +
-                            "&characterEncoding=utf8" +
-                            "&useUnicode=true" +
-                            "&useJDBCCompliantTimezoneShift=true" +
-                            "&useLegacyDatetimeCode=false" +
-                            "&serverTimezone=UTC",
-                    "root", "coderslab");
-
+            Connection connection = setConnection();
             String sql = "INSERT INTO guest (name, description) VALUES (?, ?)";
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, name);
             ps.setString(2, description);
             ps.executeUpdate();
-
             ps.close();
             connection.close();
             response.getWriter().println("Dodano wpis");
-
         } catch (SQLException e) {
             e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.out.println("ERROR: failed loading Db Driver");
-        }
 
+        }
 
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
         try {
-            Class.forName("com.mysql.jdbc.Driver");
-            System.out.println("Db Driver Loaded");
-            Connection connection = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/library?useSSL=false" +
-                            "&characterEncoding=utf8" +
-                            "&useUnicode=true" +
-                            "&useJDBCCompliantTimezoneShift=true" +
-                            "&useLegacyDatetimeCode=false" +
-                            "&serverTimezone=UTC",
-                    "root", "coderslab");
-
+            Connection connection = setConnection();
             String sql = "SELECT * FROM guest ORDER BY id desc";
             PreparedStatement ps = connection.prepareStatement(sql);
             ResultSet resultSet = ps.executeQuery();
@@ -71,27 +45,35 @@ public class guestbook extends HttpServlet {
                 Entry entry = new Entry(name, description);
                 book.add(entry);
             }
-
             ps.close();
             connection.close();
-
-            for (Entry e : book) {
-                System.out.println(e.getName());
-            }
-
             request.setAttribute("book", book);
-
 
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+        getServletContext().getRequestDispatcher("/guest-book.jsp").forward(request, response);
+    }
+
+    public Connection setConnection() throws SQLException {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            System.out.println("Db Driver Loaded");
+            Connection connection = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/library?useSSL=false" +
+                            "&characterEncoding=utf8" +
+                            "&useUnicode=true" +
+                            "&useJDBCCompliantTimezoneShift=true" +
+                            "&useLegacyDatetimeCode=false" +
+                            "&serverTimezone=UTC",
+                    "root", "coderslab");
+            return connection;
+
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             System.out.println("ERROR: failed loading Db Driver");
         }
-
-        getServletContext().getRequestDispatcher("/guest-book.jsp").forward(request, response);
-
-
+        return null;
     }
 }
 
